@@ -27,6 +27,12 @@ class OpenVASTool():
             print('An error occurred', e, file=sys.stderr)
 
     def push_command(self, command, params):
+        """
+
+        :param command: 执行的命令, 同openvasmd的cmd
+        :param params: 命令中传递的参数
+        :return: 返回响应的内容
+        """
         with self.gmp:
             if not params:
                 responce = self.gmp.__getattribute__(command)()

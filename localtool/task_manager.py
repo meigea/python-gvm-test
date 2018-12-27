@@ -4,7 +4,7 @@ from datetime import datetime
 
 TCP_PORT_MAX = UDP_PORT_MAX = 20000
 DEFAULT_PORTS = "T:1-" + str(TCP_PORT_MAX) + ",U:1-" + str(UDP_PORT_MAX)
-DEFAULT_HOSTS = "127.0.0.1,192.168.2.99"
+DEFAULT_HOSTS = ["127.0.0.1", "192.168.2.6", "192.168.2.99"]
 
 class Task():
     def __init__(self, hosts=DEFAULT_HOSTS, ports=DEFAULT_PORTS, task_desc=None):
@@ -136,7 +136,12 @@ class Task():
         """
         from utils.redis_cli import RC
         _resp = OpenVASTool().push_command("get_task", {"task_id": RC.get("task_id")})
-        return _resp
+        _data = _resp["get_tasks_response"]["task"]
+        _keys = ["@id", "name", "comment", "creation_time", "modification_time", "progress", "status"]
+        _info = {}
+        for _key in _keys:
+            _info[_key] = _data[_key]
+        return _info
 
 
     def create_task_and_runnow(self):
