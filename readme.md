@@ -2,3 +2,13 @@
 
 - 目前已经完成投放任务的测试
 - 完成了日志解析
+
+
+
+## requiremets
+- redis
+- pymongo
+- apscheduler
+- xmltodict
+- python-gvm
+- pymysql

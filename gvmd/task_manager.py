@@ -1,6 +1,7 @@
-from utils.OpenVasUtil import OpenVASTool, logging
-from uuid import uuid4
 from datetime import datetime
+from uuid import uuid4
+
+from wraper.OpenVasUtil import OpenVASTool, logging
 
 TCP_PORT_MAX = UDP_PORT_MAX = 20000
 DEFAULT_PORTS = "T:1-" + str(TCP_PORT_MAX) + ",U:1-" + str(UDP_PORT_MAX)
@@ -102,7 +103,7 @@ class Task():
                       )
         _data = OpenVASTool().push_command("create_task", params)
 
-        from utils.redis_cli import RC
+        from db.redis_cli import RC
         RC.set("task_id", _data["@id"])
 
         return _data
@@ -129,19 +130,36 @@ class Task():
             self.report_recode(_resp["report_id"])  ## 记录下 report_id 后面要用
         return _resp
 
-    def get_task_info(self):
+    def get_task_info(self, task_id):
         """
-        查看当前任务的情况, 是否正在执行
+        查看任务信息
         :return:
         """
-        from utils.redis_cli import RC
-        _resp = OpenVASTool().push_command("get_task", {"task_id": RC.get("task_id")})
+        _resp = OpenVASTool().push_command("get_task", {"task_id": task_id})
         _data = _resp["get_tasks_response"]["task"]
         _keys = ["@id", "name", "comment", "creation_time", "modification_time", "progress", "status"]
         _info = {}
         for _key in _keys:
             _info[_key] = _data[_key]
         return _info
+
+    def stop_task(self, task_id):
+        """
+        暂停任务
+        :param task_id:
+        :return:
+        """
+        _resp = OpenVASTool().push_command("get_task", {"task_id": task_id})
+        return _resp
+
+    def delete_task(self, task_id):
+        """
+        删除任务
+        :param task_id:
+        :return:
+        """
+        _resp = OpenVASTool().push_command("delete_task", {"task_id": task_id})
+        return _resp
 
 
     def create_task_and_runnow(self):
@@ -160,17 +178,52 @@ class Task():
         :param report_id:
         :return:
         """
-        from utils.redis_cli import RC
+        from db.redis_cli import RC
         return RC.set('report_id', report_id)
+
+    def get_tasks_reports_info(self):
+        _resp = OpenVASTool().push_command("get_tasks", None)["task"]
+        res = []
+        for x in _resp:
+            # report_count = int(x["report_count"]["finished"])
+            # if report_count < 1:
+            #     continue
+            try:
+                report = x["last_report"]["report"]
+                _temp={}
+                _temp["task_id"] = x["@id"]
+                _temp["report_id"] = report["@id"]
+                _temp["scan_end"] = report["scan_end"]
+                _temp["scan_start"] = report["scan_start"]
+                _temp["result_count"] = report["result_count"]
+                _temp["severity"] = report["severity"]
+                res.append(_temp)
+            except:
+                logging.info("TASK-" + x["@id"] + "-没有记录")
+        return sorted(res, key=lambda x:x['scan_start'], reverse=True)
+
+    def get_the_lattest_scan_reportid(self):
+        return self.get_tasks_reports_info()[0]["report_id"]
 
     @staticmethod
     def get_report_id():
         """
         从本地获取report_id
-        :return:
+        如果本地没有找到的话，就获取最近的一次有数据的报告
+        :return: 返回reportid unid类型
         """
-        from utils.redis_cli import RC
-        return RC.get("report_id")
+        from db.redis_cli import RC
+        try:
+            if RC.get("report_id"):
+                return RC.get("report_id")
+            _reportid = Task().get_the_lattest_scan_reportid()
+            RC.set("report_id", _reportid)
+            return _reportid
+        except:
+            logging.info("获取`report_id`错误")
+        finally:
+            RC.set("task_id", Task().get_tasks_reports_info()[0]["task_id"])
+
 
 
 

@@ -10,10 +10,12 @@ import json
 import logging
 from datetime import datetime
 
+DEBUG = True
+
 logging.basicConfig(level=logging.DEBUG, filename="test-gvm" + str(datetime.now().date()) + ".log")
 
 path = "/var/run/openvasmd.sock"
-OPENVAS_CONN=DebugConnection(UnixSocketConnection(path=path))
+OPENVAS_CONN=DebugConnection(UnixSocketConnection(path=path)) if DEBUG else UnixSocketConnection(path=path)
 
 
 class OpenVASTool():
