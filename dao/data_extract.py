@@ -17,7 +17,7 @@ def insert_scanlib_oscan(item):
 
     impact = get_info("impact", item["otags"])
     if impact == "":
-        impact = item["tags"]
+        impact = item["otags"]
     _insert_sql = """insert into scanlib(oid, oname, summary, solution, vuldetect,
  impact, family, security, info_type, threat_code) values(
        "{oid}", "{oname}", "{summary}", "{solution}", "{vuldetect}","{impact}",
@@ -49,7 +49,7 @@ def insert_scanlog_item(item):
     )
     try:
         sql_action(_insert_sql)
-    finally:
+    except:
         pass
 
 def extract_item():

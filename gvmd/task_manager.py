@@ -146,7 +146,7 @@ class Task():
         return sorted(tasks, key=lambda x:x["creation_time"], reverse=True)
 
     def get_the_lattest_running_task_info(self):
-        all_infos = self.get_tasks_reports_info()
+        all_infos = self.get_all_tasks_info()
         for info in all_infos:
             if info["status"] == "Running":
                 return info
