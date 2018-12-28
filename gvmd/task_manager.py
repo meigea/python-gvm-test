@@ -130,18 +130,27 @@ class Task():
             self.report_recode(_resp["report_id"])  ## 记录下 report_id 后面要用
         return _resp
 
-    def get_task_info(self, task_id):
+    def get_all_tasks_info(self):
         """
-        查看任务信息
+        查看所有任务, 并记录
         :return:
         """
-        _resp = OpenVASTool().push_command("get_task", {"task_id": task_id})
-        _data = _resp["get_tasks_response"]["task"]
-        _keys = ["@id", "name", "comment", "creation_time", "modification_time", "progress", "status"]
-        _info = {}
-        for _key in _keys:
-            _info[_key] = _data[_key]
-        return _info
+        _resp = OpenVASTool().push_command("get_tasks", None)
+        tasks = []
+        for task in _resp["task"]:
+            _keys = ["@id", "name", "comment", "creation_time", "modification_time", "progress", "status", ]
+            _info = {}
+            for _key in _keys:
+                _info[_key] = task[_key]
+            tasks.append(_info)
+        return sorted(tasks, key=lambda x:x["creation_time"], reverse=True)
+
+    def get_the_lattest_running_task_info(self):
+        all_infos = self.get_tasks_reports_info()
+        for info in all_infos:
+            if info["status"] == "Running":
+                return info
+        return all_infos[0]
 
     def stop_task(self, task_id):
         """
@@ -180,6 +189,7 @@ class Task():
         """
         from db.redis_cli import RC
         return RC.set('report_id', report_id)
+
 
     def get_tasks_reports_info(self):
         _resp = OpenVASTool().push_command("get_tasks", None)["task"]

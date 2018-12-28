@@ -6,6 +6,10 @@ DEFAULT_CONFIG = MONGO_CONFIG
 
 class MongoConn(object):
     def __init__(self, MONGODB_CONFIG=DEFAULT_CONFIG):
+        """
+        连接配置加载
+        :param MONGODB_CONFIG:
+        """
         self.MONGODB_CONFIG = MONGODB_CONFIG
         try:
             self.conn = pymongo.MongoClient(self.MONGODB_CONFIG['host'], self.MONGODB_CONFIG['port'])
@@ -21,12 +25,23 @@ class MongoConn(object):
             sys.exit(1)
 
     def show_data(self, table='nginx_access_log'):
+        """
+        答应数据
+        :param table:
+        :return:
+        """
         my_conn = MongoConn()
         res = my_conn.db[table].find(projection={"_id":False})
         for x in res:
             print(x)
 
     def insert_data(self, table, data):
+        """
+        插入数据并审计操作
+        :param table: 选择集合
+        :param data: 选择数据集 列表
+        :return:
+        """
         from datetime import datetime
         syslog_stat = {"pre_data_len": len(data),
                        "opt_table": table,
@@ -40,13 +55,20 @@ class MongoConn(object):
             self.db["actionlog"].insert(syslog_stat)
 
     def insert_data_uniq(self, table, data, key="audit_logid"):
+        """
+        ## 无重插入
+        :param table:
+        :param data:
+        :param key:
+        :return:
+        """
         # import numpy as np
         try:
             mongo_saved_data = [data[key] for data in self.db[table].find({})]
         except:
             mongo_saved_data = []
         res_data = [item for item in data if item[key] not in mongo_saved_data]
-        ## 无重插入
+
         from datetime import datetime
         syslog_stat = {"pre_data_len": len(data), "opt_table": table, "stat": "Insert【" + str(len(res_data)) + "】条数据", "runtime": str(datetime.now())}
         try:
@@ -57,6 +79,10 @@ class MongoConn(object):
             self.db["actionlog"].insert(syslog_stat)
 
     def show_actions_logs(self):
+        """
+        审计操作查看
+        :return:
+        """
         # return self.db["actionlog"].find()
         for x in self.db["actionlog"].find():
             print(x)
@@ -65,12 +91,12 @@ class MongoConn(object):
         self.db[table].remove()
 
     def show_by_condition(self, table, condition={}):
+        """
         # 根据条件进行查询，返回所有记录
+        :param table:
+        :param condition:
+        :return:
+        """
         res = self.db[table].find(condition)
         for x in res:
             print(x)
-
-    def show_actions(self):
-        for x in self.db["actionlog"].find():
-            print(x)
-

@@ -43,22 +43,6 @@ class Report():
         result["security"] = x["severity"]
         return result
 
-    def find_rw(self):
-        params = dict(
-            report_id="13f81a0f-216c-4b27-be61-98eef7315eb3",
-        )
-        datas = OpenVASTool().push_command("get_report", params)
-        items = datas["get_reports_response"]["report"]["report"]["results"]["result"]
-        res = []
-        for item in items:
-            res.append(self.extract_siggle_item(item))
-        
-        with open("demo.txt", "w+") as f:
-            f.write(str(res))
-            f.close()
-
-        return datas
-
 
 class ResultMg():
     def __init__(self):
@@ -75,8 +59,8 @@ class ResultMg():
                     _temp = Report().extract_siggle_item(item)
                 except:
                     _temp = {}
-                    logging.info("转化-" +report_id+ "-报告得数据失败" )
-                _temp["report_id"] = report_id ## 这里的 report_id 就是 task_id 等价。
+                    logging.info("转化-" + report_id+ "-报告得数据失败" )
+                _temp["report_id"] = str(report_id) ## 这里的 report_id 就是 task_id 等价。
                 results.append(_temp)
             return results
         except:

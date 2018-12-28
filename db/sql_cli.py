@@ -18,7 +18,7 @@ def from_sql_get_data(sql, MPP_CONFIG=MPP_CONFIG):
         except:
             data = None
     finally:
-        ## connection.commit()
+        # connection.commit()
         corsor.close()
         connection.close()
     return data
